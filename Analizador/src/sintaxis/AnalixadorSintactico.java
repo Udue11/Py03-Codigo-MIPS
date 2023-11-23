@@ -28,15 +28,15 @@ public class AnalixadorSintactico {
         generar(ruta1, ruta2, rutaS);
         
         try {
-            String txt = Files.readString(Path.of(lexico.AnalizadorLexico.rutap));
-        
+            String txt = Files.readString(Path.of(lexico.AnalizadorLexico.rutap));        
             Syntax s = new Syntax(new sintaxis.LexerCup(new StringReader(txt)));
-
             List<String> errores = new ArrayList<>();
             
             System.out.println("4");
             
             s.parse();
+            
+            
             System.out.println("5");
             System.out.println(s);
             if (errores.isEmpty()) {

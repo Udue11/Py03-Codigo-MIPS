@@ -22,8 +22,8 @@ import java.util.logging.Logger;
  * @author Froylan Lara Oses
  */
 public class AnalizadorLexico {
-    public static String rutap = "C:/Users/Froylan Lara Oses/Downloads/ejemplo código 1.sintactico.txt";
-    //public static String rutap = "C:/Users/Froylan Lara Oses/Downloads/ejemplo código 2.sintactico.txt";
+    public static String rutap = "..//Analizador/ejemplo código 1.sintactico.txt";
+    //public static String rutap = "..//Analizador/ejemplo código 2.sintactico.txt";
     
     public static void main(String[] args) {
         String ruta = "..//Analizador/src/lexico/lexer.flex";
