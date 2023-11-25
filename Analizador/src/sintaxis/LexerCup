@@ -89,6 +89,6 @@ ComentBlo = "/*" ( [^*] | \*+ [^/*] )* "*"+ "/"
 \'([^\'\\]|\\.)\'                   { return symbol(sym.LITCHAR, yychar, yyline, yytext()); }
 "//"[^\n]*\n                        { return symbol(sym.COMENTARIOSIMPLE, yychar, yyline, yytext()); }
 {ComentBlo}                         { return symbol(sym.COMENTARIOMULTIPLE, yychar, yyline, yytext()); }
-[ \n]+                              { /* Ignore */ }
+[ \r\n]+                              { /* Ignore */ }
 
-[^]                                 { return symbol(sym.error, yychar, yyline, yytext()); }
+[^]                                 {System.out.println("Error léxico: "+yytext()+" en la línea: "+(yyline+1)+" y columna: "+(yycolumn+1));}
