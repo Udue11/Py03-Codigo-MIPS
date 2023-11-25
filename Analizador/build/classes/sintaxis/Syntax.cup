@@ -309,7 +309,7 @@ non terminal    LITBOOL,OPERADORESARITME,OPERADORESLOGICOS,OPERADORESUNARIOS,OPE
                 OPERACIONRELAARIT,OPERANDOSLOGICOS,OPERACIONLOGICAS,CONDICIONES,SENTENCIA,ESTRUCTCONTROL,VALORESBLOQUECODIGO,                
                 BLOQUECODIGO,ESTRUCTELSE,ESTRUCTIF,PARAMFORRANGEUNO,PARAMFORRANGEDOS,PARAMFORRANGETRES,PARAMFORRANGE,ESTRUCTFORRANGE,                
                 ESTRUCTWHILE,LITERAL,CASE,CASES,DEFAULT,ESTRUCTSWITCH,TIPOSPARAM,PARAMFUNCIONES,FUNCMAIN,CREAFUNC,                
-                PARMFUNC,PARAMLLAMARFUNC,PARAMLLAMAFUNC,LLAMARFUNC,SENTLLAMARFUNC,GLOBALVAR,VALORPROGRAMA,INIFUN,VALORESPROGRAMA,PROGRAMA,INICIO,VALORESCONDI,INIFUNMAIN,INICIOFOR,PRUEBAENTRA;
+                PARMFUNC,PARAMLLAMARFUNC,PARAMLLAMAFUNC,LLAMARFUNC,SENTLLAMARFUNC,GLOBALVAR,VALORPROGRAMA,INIFUN,VALORESPROGRAMA,PROGRAMA,INICIO,VALORESCONDI,INIFUNMAIN,INICIOFOR,TIPORETORNO;
 
 precedence left TIPOINT , TIPOFLOAT , TIPOBOOL , TIPOCHAR ;
 precedence left SIGCONJUNCION, SIGDISYUNCION;
@@ -623,18 +623,9 @@ INICIOIF            ::= RESERVIF:reserv SEPARADOR {:
                         :} ;
 
 FINIF               ::= {:    
-                            System.out.println("contador_fin_if");  
-                            System.out.println(contador_fin_if); 
-                            System.out.println("contador_if");  
-                            System.out.println(contador_if); 
-                            int diferencia = contador_if - contador_fin_if;
-                            System.out.println("diferencia");
-                            System.out.println(diferencia);
-
+                            int diferencia = contador_if - contador_fin_if;                            
                             if (diferencia != 0 ){
                                 if(contador_if_anidados == 0){contador_if_anidados = diferencia+1;}
-                                System.out.println("contador_if-contador_if_anidados");
-                                System.out.println(contador_if-contador_if_anidados);
                                 codIn3D.append("\n_end_if_"+(contador_fin_if + contador_if_anidados-1)+":");
                                 mipsMain.append("\n_end_if_"+(contador_fin_if + contador_if_anidados-1)+":");
                                 contador_if_anidados -= 1;
@@ -646,8 +637,7 @@ FINIF               ::= {:
                                 codIn3D.append("\n_end_if_"+(contador_if)+":");
                                 mipsMain.append("\n_end_if_"+(contador_if)+":");
                                 contador_fin_if += 1;  
-                            }                            
-                            System.out.println("----------------------");
+                            }      
                             //contador_fin_if += 1;  
                         :} ;
 
@@ -696,7 +686,7 @@ PARAMFUNCIONES      ::= SIGABREPARENT PARAMETROFUNCION SIGCIERRAPARENT
                         | SIGABREPARENT SIGCIERRAPARENT;
 FUNCMAIN            ::=  INIFUNMAIN PARAMFUNCIONES SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES
                 {:  
-                    codIn3D.append("\n_"+hashTree.getLast()+"_end:"); 
+                    codIn3D.append("\n_main_end:"); 
                     hashTree.removeLast(); 
                 :};
 
@@ -732,7 +722,11 @@ CREAFUNC            ::= INIFUN PARAMFUNCIONES SIGABRELLAVES BLOQUECODIGO SIGCIER
                     hashTree.removeLast(); 
                 :};
 
-INIFUN              ::= TIPOINT:tip SEPARADOR IDENTIFICADOR:id
+TIPORETORNO         ::= TIPOINT {: RESULT = "int";:}
+                        | TIPOFLOAT {: RESULT = "float";:}
+                        | TIPOBOOL {: RESULT = "boolean";:};
+
+INIFUN              ::= TIPORETORNO:tip IDENTIFICADOR:id
                 {:
                     String tipoTabla = "tipo:funcion:"+id.toString()+": "+tip.toString();
                     if((!(tip.toString().equals("int"))) && (!(tip.toString().equals("float"))) && (!(tip.toString().equals("bool")))){
