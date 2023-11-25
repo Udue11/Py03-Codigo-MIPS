@@ -25,8 +25,9 @@ action code {:
     int contador_for = 0;
     int contador_while = 0;
     int contador_if = 0;
+    int contador_fin_if = 1;
+    int contador_if_anidados = 0;
     int contador_else = 0;
-    int contador_elif = 0;
     String fatherCurrentHash = null;
     LinkedList<String> hashTree = new LinkedList<>();
     int currentHashPos = 0;
@@ -107,13 +108,11 @@ action code {:
     private void imprimirTablaSimbolos(){
         for(String key: listaTablaSimbolos.keySet()){
             System.out.println("-------------------------");
-            System.out.println("");
             System.out.println("Tabla de símbolos: "+key);
             System.out.println("Valores: ");
             for(String item: listaTablaSimbolos.get(key)){
                 System.out.println(item);
             }
-
             System.out.println("");
         }
 
@@ -310,7 +309,7 @@ non terminal    LITBOOL,OPERADORESARITME,OPERADORESLOGICOS,OPERADORESUNARIOS,OPE
                 OPERACIONRELAARIT,OPERANDOSLOGICOS,OPERACIONLOGICAS,CONDICIONES,SENTENCIA,ESTRUCTCONTROL,VALORESBLOQUECODIGO,                
                 BLOQUECODIGO,ESTRUCTELSE,ESTRUCTIF,PARAMFORRANGEUNO,PARAMFORRANGEDOS,PARAMFORRANGETRES,PARAMFORRANGE,ESTRUCTFORRANGE,                
                 ESTRUCTWHILE,LITERAL,CASE,CASES,DEFAULT,ESTRUCTSWITCH,TIPOSPARAM,PARAMFUNCIONES,FUNCMAIN,CREAFUNC,                
-                PARMFUNC,PARAMLLAMARFUNC,PARAMLLAMAFUNC,LLAMARFUNC,SENTLLAMARFUNC,GLOBALVAR,VALORPROGRAMA,INIFUN,VALORESPROGRAMA,PROGRAMA,INICIO,VALORESCONDI,INIFUNMAIN, PRUEBAENTRA;
+                PARMFUNC,PARAMLLAMARFUNC,PARAMLLAMAFUNC,LLAMARFUNC,SENTLLAMARFUNC,GLOBALVAR,VALORPROGRAMA,INIFUN,VALORESPROGRAMA,PROGRAMA,INICIO,VALORESCONDI,INIFUNMAIN,INICIOFOR,PRUEBAENTRA;
 
 precedence left TIPOINT , TIPOFLOAT , TIPOBOOL , TIPOCHAR ;
 precedence left SIGCONJUNCION, SIGDISYUNCION;
@@ -592,7 +591,7 @@ OPERADORESRELA      ::= SIGMENOR
 OPERACIONRELAARIT    ::= VALORESARIT;
 OPERACIONRELAARIT    ::= VALORESARIT OPERADORESRELA VALORESARIT;
 
-OPERANDOSLOGICOS    ::=  LITBOOL:lit {: System.out.println("LITBOOL "+ lit.toString()); :} | SEPARADOR IDENTIFICADOR
+OPERANDOSLOGICOS    ::=  LITBOOL:lit | SEPARADOR IDENTIFICADOR
                         | SIGABREPARENT OPERACIONRELAARIT SIGCIERRAPARENT;
 OPERACIONLOGICAS    ::= OPERANDOSLOGICOS;
 OPERACIONLOGICAS    ::= SIGNEGACION OPERANDOSLOGICOS;
@@ -608,13 +607,11 @@ BLOQUECODIGO        ::= VALORESBLOQUECODIGO BLOQUECODIGO
                         | COMENTARIOS;
 
 ESTRUCTELSE         ::= RESERVELSE SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES;
-ESTRUCTIF           ::= INICIOIF CONDICIONES SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES ESTRUCTELSE FINIF {: System.out.println("finIf"); :}
-                        | INICIOIF CONDICIONES SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES FINIF {: System.out.println("finIf"); :};
+ESTRUCTIF           ::= INICIOIF CONDICIONES SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES ESTRUCTELSE FINIF
+                        | INICIOIF CONDICIONES SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES FINIF;
 INICIOIF            ::= RESERVIF:reserv SEPARADOR {: 
-                            System.out.println(reserv.toString()); 
                             String tipoTabla = "tipo:condicional:if";
                             ArrayList<String> listaSimbolos = new ArrayList<String>();
-
                             fatherCurrentHash = currentHash;
                             currentHash = "if_"+(++contador_if)+"_"+ hashTree.get(currentHashPos);
                             listaSimbolos.add(tipoTabla);
@@ -625,7 +622,34 @@ INICIOIF            ::= RESERVIF:reserv SEPARADOR {:
                             mipsMain.append("\n_if_" + contador_if + ":");
                         :} ;
 
-FINIF ::= {:    codIn3D.append("\n_end_if_"+(contador_if)+":"); :} ;
+FINIF               ::= {:    
+                            System.out.println("contador_fin_if");  
+                            System.out.println(contador_fin_if); 
+                            System.out.println("contador_if");  
+                            System.out.println(contador_if); 
+                            int diferencia = contador_if - contador_fin_if;
+                            System.out.println("diferencia");
+                            System.out.println(diferencia);
+
+                            if (diferencia != 0 ){
+                                if(contador_if_anidados == 0){contador_if_anidados = diferencia+1;}
+                                System.out.println("contador_if-contador_if_anidados");
+                                System.out.println(contador_if-contador_if_anidados);
+                                codIn3D.append("\n_end_if_"+(contador_fin_if + contador_if_anidados-1)+":");
+                                mipsMain.append("\n_end_if_"+(contador_fin_if + contador_if_anidados-1)+":");
+                                contador_if_anidados -= 1;
+                                if(contador_if_anidados == 0){                            
+                                    contador_fin_if = contador_if+1;
+                                    contador_if_anidados = 0;
+                                }
+                            }else{
+                                codIn3D.append("\n_end_if_"+(contador_if)+":");
+                                mipsMain.append("\n_end_if_"+(contador_if)+":");
+                                contador_fin_if += 1;  
+                            }                            
+                            System.out.println("----------------------");
+                            //contador_fin_if += 1;  
+                        :} ;
 
 PARAMFORRANGEUNO    ::= LITINT:litInt {: RESULT = litInt.toString()+": "+"int"; :};
 PARAMFORRANGEDOS    ::= LITINT:parm1 ENDLINE LITINT:parm2 {: RESULT = parm1.toString()+": "+"paramInicia" + parm2.toString()+": "+"paramFinaliza"; :};
@@ -633,7 +657,19 @@ PARAMFORRANGETRES   ::= LITINT:parm1 ENDLINE LITINT:parm2 ENDLINE LITINT:parm3 {
 PARAMFORRANGE       ::= PARAMFORRANGEUNO 
                         | PARAMFORRANGEDOS 
                         | PARAMFORRANGETRES;
-ESTRUCTFORRANGE     ::= RESERVFORRANGE SIGABREPARENT PARAMFORRANGE SIGCIERRAPARENT SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES;
+ESTRUCTFORRANGE     ::= INICIOFOR RESERVFORRANGE SIGABREPARENT PARAMFORRANGE SIGCIERRAPARENT SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES;
+INICIOFOR           ::= {: 
+                            String tipoTabla = "tipo:ciclo:for";
+                            ArrayList<String> listaSimbolos = new ArrayList<String>();
+                            fatherCurrentHash = currentHash;
+                            currentHash = "for_"+(++contador_for)+"_"+fatherCurrentHash;
+                            listaSimbolos.add(tipoTabla);
+                            hashTree.addLast(currentHash);
+                            currentHashPos++;
+                            listaTablaSimbolos.put(currentHash, listaSimbolos);
+                            codIn3D.append("\n_begin_for_"+(contador_for)+":");
+                        :} ;
+
 
 ESTRUCTWHILE        ::= RESERVWHILE CONDICIONES SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES 
                         | RESERVWHILE CONDICIONES SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES ESTRUCTELSE;
@@ -650,7 +686,7 @@ ESTRUCTSWITCH       ::= RESERVSWITCH SIGABREPARENT IDENTIFICADOR SIGCIERRAPARENT
 
 TIPOSPARAM          ::= TIPOINT {: RESULT = "int";:} 
                         | TIPOFLOAT {: RESULT = "float";:} 
-                        | TIPOBOOL {: RESULT = "boole";:}
+                        | TIPOBOOL {: RESULT = "bool";:}
                         | TIPOCHAR {: RESULT = "char";:};
 PARMFUNC            ::= TIPOSPARAM:tip SEPARADOR IDENTIFICADOR:id ;
                         
@@ -698,27 +734,27 @@ CREAFUNC            ::= INIFUN PARAMFUNCIONES SIGABRELLAVES BLOQUECODIGO SIGCIER
 
 INIFUN              ::= TIPOINT:tip SEPARADOR IDENTIFICADOR:id
                 {:
-                    String tipoTabla;
-                    if(id.toString().equals("main")){
-                     tipoTabla = "tipo:funcion:"+id.toString()+": "+tip.toString();
-                    }
-                    else{
-                     tipoTabla = "tipo:funcion:"+id.toString()+": "+tip.toString();
-                    }
-                    if(existeFuncion(id.toString()) == null){
-                         ArrayList<String> listaSimbolos = new ArrayList<String>();
-                         currentHash = id.toString();
-                         listaSimbolos.add(tipoTabla);
-                         hashTree.addLast(currentHash);
-                         listaTablaSimbolos.put(currentHash, listaSimbolos);
-                         RESULT = tip.toString()+" "+id.toString();
-                         codIn3D.append("\n_"+id.toString()+"_begin:");
-                         mipsMain.append("\n"+id.toString()+":");
-                    }
-                    else{
-                         currentHash = id.toString();
-                         hashTree.addLast(currentHash);
-                         manejoError("Función "+id.toString()+" ya existe", "semántico");
+                    String tipoTabla = "tipo:funcion:"+id.toString()+": "+tip.toString();
+                    if((!(tip.toString().equals("int"))) && (!(tip.toString().equals("float"))) && (!(tip.toString().equals("bool")))){
+                        currentHash = id.toString();
+                        hashTree.addLast(currentHash);
+                        manejoError("El tipo de dato de retorno de la función "+id.toString()+" no es valido", "semántico");
+                    }else{
+                        if(existeFuncion(id.toString()) == null){
+                             ArrayList<String> listaSimbolos = new ArrayList<String>();
+                             currentHash = id.toString();
+                             listaSimbolos.add(tipoTabla);
+                             hashTree.addLast(currentHash);
+                             listaTablaSimbolos.put(currentHash, listaSimbolos);
+                             RESULT = tip.toString()+" "+id.toString();
+                             codIn3D.append("\n_"+id.toString()+"_begin:");
+                             mipsMain.append("\n"+id.toString()+":");
+                        }
+                        else{
+                             currentHash = id.toString();
+                             hashTree.addLast(currentHash);
+                             manejoError("Función "+id.toString()+" ya existe", "semántico");
+                        }
                     }
                 :}; 
 
@@ -740,7 +776,7 @@ SENTLLAMARFUNC      ::= LLAMARFUNC ENDLINE;
 SENTENCIA           ::= VARIABLES 
                         | FUNCLEER 
                         | FUNCESCRIBIR ;
-ESTRUCTCONTROL      ::= ESTRUCTIF {: System.out.println("??"); :}
+ESTRUCTCONTROL      ::= ESTRUCTIF
                         | ESTRUCTSWITCH 
                         | ESTRUCTFORRANGE 
                         | ESTRUCTWHILE;
@@ -770,4 +806,4 @@ PROGRAMA            ::= FUNCMAIN
                         | VALORESPROGRAMA FUNCMAIN
                         VALORESPROGRAMA;
 
-INICIO              ::= PROGRAMA {:imprimirTablaSimbolos(); imprimirCodigo3D(); imprimirCodigoMIPS();:};
+INICIO              ::= PROGRAMA {: /*imprimirTablaSimbolos();*/ imprimirCodigo3D(); imprimirCodigoMIPS();:};

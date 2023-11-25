@@ -33,7 +33,7 @@ public class AnalixadorSintactico {
             Syntax s = new Syntax(new sintaxis.LexerCup(new StringReader(txt)));
             List<String> errores = new ArrayList<>();
             
-            System.out.println("4");
+            System.out.println("s.parse()");
             
             s.parse();
             
