@@ -179,9 +179,9 @@ action code {:
     */
     private void manejoError(String error, String tipoError){
         errores = true;
-        int linea = lex.getLine();
-        int columna = lex.getColumn();
-        System.out.println("Error "+tipoError+": "+ error +" (en la linea: " + linea + " y columna: " + columna+")");
+        System.out.println(lex);
+
+        System.out.println("Error "+tipoError+": "+ error );
         System.out.println("Se continua con el análisis "+tipoError);
     } 
 
@@ -199,7 +199,6 @@ action code {:
                 for (String elemento : tablaSimbolos) {
                     // Divide el elemento en ID y tipo
                     String[] partes = elemento.split(": ");
-                    
                     if (partes[0].equals(idBuscado)) { // Verifica si el ID coincide con el ID buscado
                         return partes[1]; // Se encontró el ID y se envía el tipo del ID
                     }
@@ -347,20 +346,63 @@ OPERACIONUNARIA     ::= OPERAUNARIA ENDLINE;
 
 VALORESARIT         ::= LITINT:litInt {: RESULT = litInt.toString()+": "+"int"; :}
                         | LITFLOAT:litfloat {: RESULT = litfloat.toString()+": "+"float"; :}
-                        | IDENTIFICADOR : id {: RESULT = id; :} 
+                        | IDENTIFICADOR : id {: RESULT = id+": "+"var"; :} 
                         | LLAMARFUNC 
                         | OPERAUNARIA;                        
-OPERACIONARIT       ::= VALORESARIT
-                        | VALORESARIT OPERADORESARITME OPERACIONARIT
-                        | SIGABREPARENT OPERACIONARIT SIGCIERRAPARENT;
+OPERACIONARIT       ::= VALORESARIT:valor {:RESULT = valor ;:}
+                        | VALORESARIT:valor1 OPERADORESARITME:sig OPERACIONARIT:valor2 {: 
+                            String[] partes_valor1 = valor1.toString().split(": ");
+                            String[] partes_valor2 = valor2.toString().split(": ");
+                            boolean errores = false;
+
+                            if (!(partes_valor1[1].equals("float")) && (!partes_valor1[1].equals("int")) && (!partes_valor1[1].equals("var"))){
+                                //Manejo error semántico
+                                errores = true;
+                                manejoError("'" + valor1 + " " + sig + " " + valor2 + "' El operador: "+ valor1 +" es de un tipo incorrecto para una operacion aritmetica, dentro de "+currentHash, "semántico");
+                                RESULT = "error_semantico";
+                            }
+                            if (!(partes_valor2[1].equals("float")) && (!partes_valor2[1].equals("int")) && (!partes_valor2[1].equals("var"))){
+                                //Manejo error semántico
+                                errores = true;
+                                manejoError("'" + valor1 + " " + sig + " " + valor2 + "' El operador: "+ valor2 +" es de un tipo incorrecto para una operacion aritmetica, dentro de "+currentHash, "semántico");
+                                RESULT = "error_semantico";                               
+                            }   
+                            if (partes_valor1[1].equals(partes_valor2[1]) || partes_valor1[1].equals("var") || partes_valor2[1].equals("var")){
+                                if (!errores){
+                                    String tipo = "";
+                                    if (partes_valor1[1].equals("var")&& (!partes_valor2[1].equals("var"))){
+                                        tipo = partes_valor2[1];
+                                    }else{
+                                        if (partes_valor2[1].equals("var")&& (!partes_valor1[1].equals("var"))){
+                                            tipo = partes_valor1[1];
+                                        }else{
+                                            if ((!partes_valor2[1].equals("var")) && (!partes_valor1[1].equals("var"))){
+                                                tipo = partes_valor1[1];
+                                            }else{
+                                                tipo = buscarID_o_tipoID(listaTablaSimbolos.get(fatherCurrentHash), partes_valor1[0], "id");
+                                            }
+                                        }
+                                        
+                                    }
+                                    String temp = "(" + partes_valor1[0] + sig + partes_valor2[0] +")";
+                                    RESULT = temp + ": " + tipo; 
+                                }
+                            }else{
+                                //Manejo error semántico
+                                manejoError("'" + valor1 + " " + sig + " " + valor2 + "' Los operadores no son del mismo tipo, dentro de "+currentHash, "semántico");
+                                RESULT = "error_semantico";                                 
+                            }
+                        :} 
+                        | SIGABREPARENT OPERACIONARIT:valor1 SIGCIERRAPARENT {:RESULT = valor1 ;:};
 
 ASIGNVAR            ::= IDENTIFICADOR SIGNOIGUAL OPERACIONARIT ENDLINE;
+
 CREAVARINT          ::= TIPOINT:tip SEPARADOR IDENTIFICADOR:id ENDLINE
                 {:   // ++++ Análisis semántico ++++
                     if(fatherCurrentHash != null && buscarID_o_tipoID(listaTablaSimbolos.get(fatherCurrentHash), id.toString(), "id") == null){
                         if(buscarID_o_tipoID(listaTablaSimbolos.get(currentHash), id.toString(), "id") == null ) {
                             // ++++ Código 3D ++++
-                            codIn3D.append("\ndata_"+tip.toString()+" "+id.toString());
+                            codIn3D.append("\ndataInt"+" "+id.toString());
                             mipsData.append("   " + id.toString()+": ."+"word 0"+"\n");
 
                             // +++ Tabla de símbolos ++++ 
@@ -369,13 +411,13 @@ CREAVARINT          ::= TIPOINT:tip SEPARADOR IDENTIFICADOR:id ENDLINE
                         }
                         else{
                             //Manejo error semántico
-                            manejoError("El ID: "+id+" ya ha sido utilizado en otra creación de variable dentro de "+currentHash, "semántico");
+                            manejoError("'" + tip +" # "+ id + ";' " + "El ID: "+id+" ya ha sido utilizado en otra creación de variable dentro de "+currentHash, "semántico");
                             RESULT = "error_semantico";
                         }
                     }
                     else if(fatherCurrentHash == null && buscarID_o_tipoID(listaTablaSimbolos.get(currentHash), id.toString(), "id") == null){
                             // ++++ Código 3D ++++
-                            codIn3D.append("\ndata_"+tip.toString()+" "+id.toString());
+                            codIn3D.append("\ndataInt"+" "+id.toString());
                             mipsData.append("   " + id.toString()+": ."+"word 0"+"\n");
 
                             // +++ Tabla de símbolos ++++ 
@@ -384,12 +426,57 @@ CREAVARINT          ::= TIPOINT:tip SEPARADOR IDENTIFICADOR:id ENDLINE
                     }
                     else{
                         //Manejo error semántico
-                        manejoError("El ID: "+id+" ya ha sido utilizado en otra creación de variable dentro de "+fatherCurrentHash, "semántico");
+                        manejoError("El ID: '"+id+"' ya ha sido utilizado en otra creación de variable dentro de "+fatherCurrentHash, "semántico");
                         RESULT = "error_semantico";
                     }
                 :}; 
 
-CREAASIGVARINT      ::= TIPOINT SEPARADOR IDENTIFICADOR SIGNOIGUAL OPERACIONARIT ENDLINE;
+CREAASIGVARINT      ::= TIPOINT:tip SEPARADOR IDENTIFICADOR:id SIGNOIGUAL OPERACIONARIT:op ENDLINE
+                 {:   // ++++ Análisis semántico ++++
+                    String ladoIzqTipo = tip.toString();
+                    String ladoIzqId = id.toString(); 
+                    String[] partes_op = op.toString().split(": ");
+                    if((ladoIzqTipo.equals(partes_op[1].toString())) || (partes_op[1].toString().equals("var"))){
+                        if(!(ladoIzqTipo.equals(partes_op[1].toString())) && buscarID_o_tipoID(listaTablaSimbolos.get(currentHash), partes_op[0].toString(), "id") == null){
+                            //Manejo error semántico
+                            manejoError("'" + tip +" # "+ id + " = " + partes_op[0] + ";' " + "El ID: '"+ partes_op[0] +"' no ha sido creado anteriormente", "semántico");
+                            RESULT = "error_semantico";
+                        }else{
+                            if(buscarID_o_tipoID(listaTablaSimbolos.get(currentHash), id.toString(), "id") == null ) {
+                                // ++++ Código 3D ++++
+                                String temp = "t"+(currentTemp++); 
+                                if (currentTemp == 10){
+                                    currentTemp = 0;
+                                }
+                                codIn3D.append("\ndataInt "+ladoIzqId+" = "+partes_op[0].toString());
+                                mipsData.append("   " + ladoIzqId+": ."+"word 0"+"\n");
+
+                                String mipsAsignation = "li $"+temp+", "+ partes_op[0];
+                                mipsMain.append("\n   "+mipsAsignation);
+
+                                mipsAsignation = "sw "+temp+", "+ladoIzqId.toString();                            
+                                mipsMain.append("\n   "+mipsAsignation);
+                                RESULT = "int ::"+temp; 
+
+                                // +++ Tabla de símbolos ++++ 
+                                listaTablaSimbolos.get(currentHash).add(id.toString()+": "+tip.toString());
+                                RESULT = id.toString()+": "+tip.toString();
+                            }else{
+                                //Manejo error semántico
+                                manejoError("'" + tip +" # "+ id + ";' " + "El ID: "+id+" ya ha sido utilizado en otra creación de variable dentro de "+currentHash, "semántico");
+                                RESULT = "error_semantico";
+                            }
+                        }
+                    }
+                    else{
+                        //Manejo error semántico
+                        manejoError("El ID: "+ ladoIzqId.toString() +" no ha sido creado dentro de la función", "semántico");
+                        RESULT = "error_semantico";
+                    }
+                :} ;
+
+
+
 VARIABLESINT        ::= ASIGNVAR 
                         | CREAVARINT 
                         | CREAASIGVARINT;
@@ -436,6 +523,7 @@ VALORESBOOL         ::= LITBOOL
                         | IDENTIFICADOR  
                         | SIGABREPARENT OPERACIONRELAARIT SIGCIERRAPARENT  
                         | OPERACIONBOOL{: System.out.println("Que paso?"); :};
+
 CREAVARBOOL         ::= TIPOBOOL:tip SEPARADOR IDENTIFICADOR:id ENDLINE
                 {:   // ++++ Análisis semántico ++++
                     if(fatherCurrentHash != null && buscarID_o_tipoID(listaTablaSimbolos.get(fatherCurrentHash), id.toString(), "id") == null){
