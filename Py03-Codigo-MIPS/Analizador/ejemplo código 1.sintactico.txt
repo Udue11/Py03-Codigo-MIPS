@@ -1,0 +1,9 @@
+int#main() {
+    int#a = 5;
+    int#b=1;
+    int#c=10;
+    int#d=a+b;
+    int#e=(6+(4+2)); 
+    bool#f=!True;
+    bool#g=False;
+}
