@@ -87,6 +87,7 @@ ComentBlo = "/*" ( [^*] | \*+ [^/*] )* "*"+ "/"
 -?(([1-9][0-9]*)|0)"."[0-9][1-9]*   { return symbol(sym.LITFLOAT, yychar, yyline, yytext()); }
 [a-zA-Z][a-zA-Z0-9\_]*              { return symbol(sym.IDENTIFICADOR, yychar, yyline, yytext()); }
 \'([^\'\\]|\\.)\'                   { return symbol(sym.LITCHAR, yychar, yyline, yytext()); }
+\"([^\"\\]|\\.)*\"                  { return symbol(sym.LITSTRING, yychar, yyline, yytext()); }
 "//"[^\n]*\n                        { return symbol(sym.COMENTARIOSIMPLE, yychar, yyline, yytext()); }
 {ComentBlo}                         { return symbol(sym.COMENTARIOMULTIPLE, yychar, yyline, yytext()); }
 [ \r\n]+                              { /* Ignore */ }

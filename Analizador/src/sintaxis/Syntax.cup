@@ -308,7 +308,7 @@ non terminal    LITBOOL,OPERADORESARITME,OPERADORESLOGICOS,OPERADORESUNARIOS,OPE
                 OPERACIONRELAARIT,OPERANDOSLOGICOS,OPERACIONLOGICAS,CONDICIONES,SENTENCIA,ESTRUCTCONTROL,VALORESBLOQUECODIGO,                
                 BLOQUECODIGO,ESTRUCTELSE,ESTRUCTIF,PARAMFORRANGEUNO,PARAMFORRANGEDOS,PARAMFORRANGETRES,PARAMFORRANGE,ESTRUCTFORRANGE,                
                 ESTRUCTWHILE,LITERAL,CASE,CASES,DEFAULT,ESTRUCTSWITCH,TIPOSPARAM,PARAMFUNCIONES,FUNCMAIN,CREAFUNC,                
-                PARMFUNC,PARAMLLAMARFUNC,PARAMLLAMAFUNC,LLAMARFUNC,SENTLLAMARFUNC,GLOBALVAR,VALORPROGRAMA,INIFUN,VALORESPROGRAMA,PROGRAMA,INICIO,VALORESCONDI,INIFUNMAIN,INICIOFOR,TIPORETORNO;
+                PARMFUNC,PARAMLLAMARFUNC,PARAMLLAMAFUNC,LLAMARFUNC,SENTLLAMARFUNC,GLOBALVAR,VALORPROGRAMA,INIFUN,VALORESPROGRAMA,PROGRAMA,INICIO,VALORESCONDI,INIFUNMAIN,INICIOFOR,TIPORETORNO,CONDICIONALFOR;
 
 precedence left TIPOINT , TIPOFLOAT , TIPOBOOL , TIPOCHAR ;
 precedence left SIGCONJUNCION, SIGDISYUNCION;
@@ -431,7 +431,7 @@ CREAVARINT          ::= TIPOINT:tip SEPARADOR IDENTIFICADOR:id ENDLINE
                     }
                 :}; 
 
-CREAASIGVARINT      ::= TIPOINT:tip SEPARADOR IDENTIFICADOR:id SIGNOIGUAL OPERACIONARIT:op ENDLINE
+CREAASIGVARINT      ::= TIPOINT:tip SEPARADOR IDENTIFICADOR:id SIGNOIGUAL OPERACIONARIT:op ENDLINE 
                  {:   // ++++ Análisis semántico ++++
                     String ladoIzqTipo = tip.toString();
                     String ladoIzqId = id.toString(); 
@@ -729,13 +729,189 @@ FINIF               ::= {:
                             //contador_fin_if += 1;  
                         :} ;
 
-PARAMFORRANGEUNO    ::= LITINT:litInt {: RESULT = litInt.toString()+": "+"int"; :};
-PARAMFORRANGEDOS    ::= LITINT:parm1 ENDLINE LITINT:parm2 {: RESULT = parm1.toString()+": "+"paramInicia" + parm2.toString()+": "+"paramFinaliza"; :};
-PARAMFORRANGETRES   ::= LITINT:parm1 ENDLINE LITINT:parm2 ENDLINE LITINT:parm3 {: RESULT = parm1.toString()+": "+"paramInicia" + parm2.toString()+": "+"paramIncremento" + parm3.toString()+": "+"paramFinaliza"; :};
-PARAMFORRANGE       ::= PARAMFORRANGEUNO 
-                        | PARAMFORRANGEDOS 
-                        | PARAMFORRANGETRES;
-ESTRUCTFORRANGE     ::= INICIOFOR RESERVFORRANGE SIGABREPARENT PARAMFORRANGE SIGCIERRAPARENT SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES;
+PARAMFORRANGEUNO    ::= VALORESARIT:param1
+                        {:  System.out.println("entro");
+                            String[] partes_valor = param1.toString().split(": ");
+                            boolean errores = false;
+                            if ((!partes_valor[1].equals("int")) && (!partes_valor[1].equals("var"))){
+                                //Manejo error semántico
+                                errores = true;
+                                manejoError(" El parametro: '"+ partes_valor[0] +"' es de un tipo incorrecto para un parametro del 'forRange', dentro de "+currentHash, "semántico");
+                                RESULT = "error_semantico";
+                            }else{
+                                if (partes_valor[1].equals("var")){
+                                    String tipo = buscarID_o_tipoID(listaTablaSimbolos.get(fatherCurrentHash), partes_valor[0], "id");
+                                    System.out.println(tipo);
+                                    if(tipo == null){
+                                        //Manejo error semántico
+                                        errores = true;
+                                        manejoError(" El parametro: '"+ partes_valor[0] +"' es de un variable la cual no ha sido definida previamente, dentro de "+currentHash, "semántico");
+                                        RESULT = "error_semantico";
+                                    }else {
+                                        if(tipo.equals("int")){
+                                            RESULT = "1".toString()+": " + "1".toString()+": " + partes_valor[0];
+                                        }else{
+                                            //Manejo error semántico
+                                            errores = true;
+                                            manejoError(" El parametro: '"+ partes_valor[0] +"' el tipo de dato de la variable no es correcto, dentro de "+currentHash, "semántico");
+                                            RESULT = "error_semantico";
+                                        }
+                                    }
+                                }else{
+                                    RESULT = "1".toString()+": " + "1".toString()+": " + partes_valor[0];
+                                }
+                            }
+                        :};
+PARAMFORRANGEDOS    ::= VALORESARIT:param1 ENDLINE VALORESARIT:param2
+                        {:  System.out.println("entro");
+                            String[] partes_valor = param1.toString().split(": ");
+                            String[] partes_valor2 = param2.toString().split(": ");
+                            boolean errores = false;
+                            if ((!partes_valor[1].equals("int")) && (!partes_valor[1].equals("var"))){
+                                //Manejo error semántico
+                                errores = true;
+                                manejoError(" El parametro: '"+ partes_valor[0] +"' es de un tipo incorrecto para un parametro del 'forRange', dentro de "+currentHash, "semántico");
+                                RESULT = "error_semantico";
+                            }else{
+                                if (partes_valor[1].equals("var")){
+                                    String tipo = buscarID_o_tipoID(listaTablaSimbolos.get(fatherCurrentHash), partes_valor[0], "id");
+                                    if(tipo == null){
+                                        //Manejo error semántico
+                                        errores = true;
+                                        manejoError(" El parametro: '"+ partes_valor[0] +"' es de un variable la cual no ha sido definida previamente, dentro de "+currentHash, "semántico");
+                                        RESULT = "error_semantico";
+                                    }else {
+                                        if(!tipo.equals("int")){
+                                            //Manejo error semántico
+                                            errores = true;
+                                            manejoError(" El parametro: '"+ partes_valor[0] +"' el tipo de dato de la variable no es correcto, dentro de "+currentHash, "semántico");
+                                            RESULT = "error_semantico";
+                                        }
+                                    }
+                                }
+                            }
+                            //validaciones param2
+                            if ((!partes_valor2[1].equals("int")) && (!partes_valor2[1].equals("var"))){
+                                //Manejo error semántico
+                                errores = true;
+                                manejoError(" El parametro: '"+ partes_valor2[0] +"' es de un tipo incorrecto para un parametro del 'forRange', dentro de "+currentHash, "semántico");
+                                RESULT = "error_semantico";
+                            }else{
+                                if (partes_valor2[1].equals("var")){
+                                    String tipo = buscarID_o_tipoID(listaTablaSimbolos.get(fatherCurrentHash), partes_valor2[0], "id");
+                                    if(tipo == null){
+                                        //Manejo error semántico
+                                        errores = true;
+                                        manejoError(" El parametro: '"+ partes_valor2[0] +"' es de un variable la cual no ha sido definida previamente, dentro de "+currentHash, "semántico");
+                                        RESULT = "error_semantico";
+                                    }else {
+                                        if(!tipo.equals("int")){
+                                            //Manejo error semántico
+                                            errores = true;
+                                            manejoError(" El parametro: '"+ partes_valor2[0] +"' el tipo de dato de la variable no es correcto, dentro de "+currentHash, "semántico");
+                                            RESULT = "error_semantico";
+                                        }
+                                    }
+                                }
+                            }
+                            if(!errores){ 
+                                RESULT = partes_valor[0]+": " + "1".toString()+": " + partes_valor2[0]; 
+                            }
+                        :};
+PARAMFORRANGETRES   ::= VALORESARIT:param1 ENDLINE VALORESARIT:param2 ENDLINE VALORESARIT:param3   
+                        {:  
+                            String[] partes_valor = param1.toString().split(": ");
+                            String[] partes_valor2 = param2.toString().split(": ");
+                            String[] partes_valor3 = param3.toString().split(": ");
+                            boolean errores = false;
+                            if ((!partes_valor[1].equals("int")) && (!partes_valor[1].equals("var"))){
+                                //Manejo error semántico
+                                errores = true;
+                                manejoError(" El parametro: '"+ partes_valor[0] +"' es de un tipo incorrecto para un parametro del 'forRange', dentro de "+currentHash, "semántico");
+                                RESULT = "error_semantico";
+                            }else{
+                                if (partes_valor[1].equals("var")){
+                                    String tipo = buscarID_o_tipoID(listaTablaSimbolos.get(fatherCurrentHash), partes_valor[0], "id");
+                                    if(tipo == null){
+                                        //Manejo error semántico
+                                        errores = true;
+                                        manejoError(" El parametro: '"+ partes_valor[0] +"' es de un variable la cual no ha sido definida previamente, dentro de "+currentHash, "semántico");
+                                        RESULT = "error_semantico";
+                                    }else {
+                                        if(!tipo.equals("int")){
+                                            //Manejo error semántico
+                                            errores = true;
+                                            manejoError(" El parametro: '"+ partes_valor[0] +"' el tipo de dato de la variable no es correcto, dentro de "+currentHash, "semántico");
+                                            RESULT = "error_semantico";
+                                        }
+                                    }
+                                }
+                            }
+                            //validaciones param2
+                            if ((!partes_valor2[1].equals("int")) && (!partes_valor2[1].equals("var"))){
+                                //Manejo error semántico
+                                errores = true;
+                                manejoError(" El parametro: '"+ partes_valor2[0] +"' es de un tipo incorrecto para un parametro del 'forRange', dentro de "+currentHash, "semántico");
+                                RESULT = "error_semantico";
+                            }else{
+                                if (partes_valor2[1].equals("var")){
+                                    String tipo = buscarID_o_tipoID(listaTablaSimbolos.get(fatherCurrentHash), partes_valor2[0], "id");
+                                    if(tipo == null){
+                                        //Manejo error semántico
+                                        errores = true;
+                                        manejoError(" El parametro: '"+ partes_valor2[0] +"' es de un variable la cual no ha sido definida previamente, dentro de "+currentHash, "semántico");
+                                        RESULT = "error_semantico";
+                                    }else {
+                                        if(!tipo.equals("int")){
+                                            //Manejo error semántico
+                                            errores = true;
+                                            manejoError(" El parametro: '"+ partes_valor2[0] +"' el tipo de dato de la variable no es correcto, dentro de "+currentHash, "semántico");
+                                            RESULT = "error_semantico";
+                                        }
+                                    }
+                                }
+                            }
+                            //validaciones param3
+                            if ((!partes_valor3[1].equals("int")) && (!partes_valor3[1].equals("var"))){
+                                //Manejo error semántico
+                                errores = true;
+                                manejoError(" El parametro: '"+ partes_valor3[0] +"' es de un tipo incorrecto para un parametro del 'forRange', dentro de "+currentHash, "semántico");
+                                RESULT = "error_semantico";
+                            }else{
+                                if (partes_valor3[1].equals("var")){
+                                    String tipo = buscarID_o_tipoID(listaTablaSimbolos.get(fatherCurrentHash), partes_valor3[0], "id");
+                                    if(tipo == null){
+                                        //Manejo error semántico
+                                        errores = true;
+                                        manejoError(" El parametro: '"+ partes_valor3[0] +"' es de un variable la cual no ha sido definida previamente, dentro de "+currentHash, "semántico");
+                                        RESULT = "error_semantico";
+                                    }else {
+                                        if(!tipo.equals("int")){
+                                            //Manejo error semántico
+                                            errores = true;
+                                            manejoError(" El parametro: '"+ partes_valor3[0] +"' el tipo de dato de la variable no es correcto, dentro de "+currentHash, "semántico");
+                                            RESULT = "error_semantico";
+                                        }
+                                    }
+                                }
+                            }
+                            if(!errores){ 
+                                RESULT = partes_valor[0]+": " + partes_valor2[0] +": " + partes_valor3[0]; 
+                            }
+                        :};
+PARAMFORRANGE       ::= PARAMFORRANGEUNO:params {: RESULT = params; :}
+                        | PARAMFORRANGEDOS:params {: RESULT = params; :}
+                        | PARAMFORRANGETRES:params {: RESULT = params; :};
+
+CONDICIONALFOR      ::= PARAMFORRANGE:params {: 
+                            if(params.equals("error_semantico")){
+                                RESULT = params;
+                            }else{
+                                System.out.println(params);
+                            }
+                        :};
+
+ESTRUCTFORRANGE     ::= INICIOFOR RESERVFORRANGE:resv SIGABREPARENT CONDICIONALFOR SIGCIERRAPARENT SIGABRELLAVES BLOQUECODIGO SIGCIERRALLAVES;
 INICIOFOR           ::= {: 
                             String tipoTabla = "tipo:ciclo:for";
                             ArrayList<String> listaSimbolos = new ArrayList<String>();
@@ -860,7 +1036,7 @@ SENTENCIA           ::= VARIABLES
                         | FUNCESCRIBIR ;
 ESTRUCTCONTROL      ::= ESTRUCTIF
                         | ESTRUCTSWITCH 
-                        | ESTRUCTFORRANGE 
+                        | ESTRUCTFORRANGE
                         | ESTRUCTWHILE;
 VALORESBLOQUECODIGO ::= SENTENCIA 
                         | ESTRUCTCONTROL 
