@@ -1,13 +1,6 @@
-int#global = 2;
 int#main() {
     int#a = 5;
-    if#( #a | #b ){
-      float#f = 1.3;
-      return#1;
-    }
-    int#b = 3;
-    forRange(b;5;8){
-       int#num = 0;
-    }
-    return#0;
+    int#b=1;
+    float#c=10.2;
+    forRange(c;a;5){return#2;}
 }

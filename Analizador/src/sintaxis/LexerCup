@@ -74,8 +74,8 @@ ComentBlo = "/*" ( [^*] | \*+ [^/*] )* "*"+ "/"
 "return"                            { return symbol(sym.RESERVRETURN, yychar, yyline, yytext()); }
 "case"                              { return symbol(sym.RESERVCASE, yychar, yyline, yytext()); }
 
-"True"                              { return symbol(sym.LITTRUE, yychar, yyline, yytext()); }
-"False"                             { return symbol(sym.LITFALSE, yychar, yyline, yytext()); }
+"true"                              { return symbol(sym.LITTRUE, yychar, yyline, yytext()); }
+"false"                             { return symbol(sym.LITFALSE, yychar, yyline, yytext()); }
 
 "int"                               { return symbol(sym.TIPOINT, yychar, yyline, yytext()); }
 "float"                             { return symbol(sym.TIPOFLOAT, yychar, yyline, yytext()); }
