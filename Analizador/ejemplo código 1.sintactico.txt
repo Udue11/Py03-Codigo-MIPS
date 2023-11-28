@@ -1,6 +1,21 @@
 int#main() {
-    int#a = 5;
-    int#b=1;
-    float#c=10.2;
-    forRange(c;a;5){return#2;}
+    int#a = 32;
+    int#b = 11;
+    switch(b){
+       case#1:
+           int#o=0;
+       case#2:
+           int#i=0;
+       default:
+           int#e=0;
+    }
+    switch(b){
+       case#1:
+           int#o=0;
+       case#2:
+           int#i=0;
+       default:
+           int#e=0;
+    }
+    return#0;
 }
