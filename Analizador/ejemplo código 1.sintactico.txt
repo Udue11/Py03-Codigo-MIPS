@@ -1,21 +1,15 @@
 int#main() {
-    int#a = 32;
-    int#b = 11;
-    switch(b){
-       case#1:
-           int#o=0;
-       case#2:
-           int#i=0;
-       default:
-           int#e=0;
+    int#a = 5;
+    int#b=1;
+    int#c=10- 2;
+    int#x=c;
+    float#d = 5.5;
+    float#e=1.5;
+    float#f=10.5- 2.5; 
+    float#g=f;
+    if#((2<3)){
+       char#p='p';
     }
-    switch(b){
-       case#1:
-           int#o=0;
-       case#2:
-           int#i=0;
-       default:
-           int#e=0;
-    }
-    return#0;
 }
+
+
