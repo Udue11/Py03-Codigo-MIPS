@@ -1,15 +1,12 @@
 int#main() {
-    int#a = 5;
-    int#b=1;
-    int#c=10- 2;
-    int#x=c;
-    float#d = 5.5;
-    float#e=1.5;
-    float#f=10.5- 2.5; 
-    float#g=f;
-    if#((2<3)){
-       char#p='p';
+    int#a = 32;
+    int#b = 2+(2*3);
+    bool#c = true;
+    bool#d=false;
+    if#(true | false){
+       int#num = 88;
+       
     }
+    while(!(c<d)){int#x;}
+    else{int#i=20;}
 }
-
-
